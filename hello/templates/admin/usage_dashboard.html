@@ -1,0 +1,172 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  #daily, #monthly, #snapshots {
+    display: none;
+  }
+
+  h2 {
+    cursor: pointer;
+    color: #004aad;
+    transition: color 0.2s;
+  }
+  h2:hover {
+    color: #008cff;
+  }
+</style>
+
+<h1 style="text-align:right;">📊 داشبورد مصرف کاربران</h1>
+
+<div style="direction:rtl;">
+
+  <!-- مصرف روزانه -->
+  <h2 onclick="toggleSection('daily')">مصرف روزانه</h2>
+  <div id="daily" style="margin-bottom:30px;">
+      <canvas id="dailyChart" height="120"></canvas>
+      <div>
+          <table class="admin-table">
+              <tr><th>کاربر</th><th>تاریخ</th><th>مصرف (بایت)</th></tr>
+              {% for d in daily %}
+                  <tr><td>{{ d.user }}</td><td>{{ d.date }}</td><td>{{ d.total_bytes_used|filesizeformat }}</td></tr>
+              {% empty %}
+                  <tr><td colspan="3">داده‌ای وجود ندارد</td></tr>
+              {% endfor %}
+          </table>
+      </div>
+  </div>
+
+  <!-- مصرف ماهانه -->
+  <h2 onclick="toggleSection('monthly')">مصرف ماهانه</h2>
+  <div id="monthly" style="margin-bottom:30px;">
+      <canvas id="monthlyChart" height="120"></canvas>
+      <div>
+          <table class="admin-table">
+              <tr><th>کاربر</th><th>سال</th><th>ماه</th><th>مصرف</th></tr>
+              {% for m in monthly %}
+                  <tr>
+                      <td>{{ m.user }}</td>
+                      <td>{{ m.year }}</td>
+                      <td>{{ m.month }}</td>
+                      <td>{{ m.total_bytes_used|filesizeformat }}</td>
+                  </tr>
+              {% empty %}
+                  <tr><td colspan="4">داده‌ای وجود ندارد</td></tr>
+              {% endfor %}
+          </table>
+      </div>
+  </div>
+
+  <!-- snapshots -->
+  <h2 onclick="toggleSection('snapshots')">اسنپ‌شات‌ها</h2>
+  <div id="snapshots" style="margin-bottom:30px;">
+      <canvas id="snapshotsChart" height="120"></canvas>
+      <table class="admin-table">
+          <tr><th>زمان</th><th>مصرف کل</th></tr>
+          {% for s in snapshots %}
+              <tr><td>{{ s.snapshot_time }}</td><td>{{ s.total_bytes|filesizeformat }}</td></tr>
+          {% empty %}
+              <tr><td colspan="2">داده‌ای وجود ندارد</td></tr>
+          {% endfor %}
+      </table>
+  </div>
+
+</div>
+
+<script>
+// مخفی کردن بخش‌ها در ابتدا
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("daily").style.display = "none";
+    document.getElementById("monthly").style.display = "none";
+    document.getElementById("snapshots").style.display = "none";
+});
+
+// داده‌های JS
+const dailyLabels = [
+    {% for d in daily %}
+        "{{ d.date }}",
+    {% endfor %}
+];
+const dailyData = [
+    {% for d in daily %}
+        {{ d.total_bytes_used }},
+    {% endfor %}
+];
+
+const monthlyLabels = [
+    {% for m in monthly %}
+        "{{ m.year }}/{{ m.month }}",
+    {% endfor %}
+];
+const monthlyData = [
+    {% for m in monthly %}
+        {{ m.total_bytes_used }},
+    {% endfor %}
+];
+
+const snapshotsLabels = [
+    {% for s in snapshots %}
+        "{{ s.snapshot_time }}",
+    {% endfor %}
+];
+const snapshotsData = [
+    {% for s in snapshots %}
+        {{ s.total_bytes }},
+    {% endfor %}
+];
+
+// نمونه چارت‌ها
+let dailyChartInstance = null;
+let monthlyChartInstance = null;
+let snapshotsChartInstance = null;
+
+// ساخت چارت‌ها
+function loadDailyChart() {
+    if (dailyChartInstance) return;
+    const ctx = document.getElementById("dailyChart").getContext("2d");
+    dailyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: dailyLabels, datasets: [{ label: 'مصرف روزانه (بایت)', data: dailyData, backgroundColor:'rgba(75,192,192,0.5)', borderWidth:1 }] },
+        options: { scales: { y: { beginAtZero:true } } }
+    });
+}
+
+function loadMonthlyChart() {
+    if (monthlyChartInstance) return;
+    const ctx = document.getElementById("monthlyChart").getContext("2d");
+    monthlyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: monthlyLabels, datasets: [{ label: 'مصرف ماهانه (بایت)', data: monthlyData, backgroundColor:'rgba(255,159,64,0.5)', borderWidth:1 }] },
+        options: { scales: { y: { beginAtZero:true } } }
+    });
+}
+
+function loadSnapshotsChart() {
+    if (snapshotsChartInstance) return;
+    const ctx = document.getElementById("snapshotsChart").getContext("2d");
+    snapshotsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: snapshotsLabels, datasets: [{ label:'مصرف کل (بایت)', data: snapshotsData, borderColor:'rgba(54,162,235,1)', backgroundColor:'rgba(54,162,235,0.2)', fill:true }] },
+        options: { scales: { y: { beginAtZero:true } } }
+    });
+}
+
+// toggle نمایش بخش‌ها و بارگذاری چارت
+function toggleSection(id) {
+    const section = document.getElementById(id);
+    if (section.style.display === "none" || section.style.display === "") {
+        section.style.display = "block";
+        if (id==='daily') loadDailyChart();
+        if (id==='monthly') loadMonthlyChart();
+        if (id==='snapshots') loadSnapshotsChart();
+    } else {
+        section.style.display = "none";
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load usage_filters %}
+
+
+{% block content %}
+<h1 style="text-align:right;">📊 داشبورد مدیریتی</h1>
+
+<div style="direction:rtl;">
+
+  <h2>مصرف روزانه (۷ روز اخیر)</h2>
+  <canvas id="dailyChart" height="100"></canvas>
+
+  <h2 style="margin-top:40px;">مصرف ماهانه (۷ ماه اخیر)</h2>
+  <canvas id="monthlyChart" height="100"></canvas>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+const dailyLabels = [
+  {% for d in daily %}
+    "{{ d.date }}",
+  {% endfor %}
+];
+const dailyData = [
+  {% for d in daily %}
+    {{ d.total_bytes_used|bytes_to_mb }},
+  {% endfor %}
+];
+const monthlyLabels = [
+  {% for m in monthly %}
+    "{{ m.year }}/{{ m.month }}",
+  {% endfor %}
+];
+const monthlyData = [
+  {% for m in monthly %}
+    {{ m.total_bytes_used }},
+  {% endfor %}
+];
+
+new Chart(document.getElementById('dailyChart'), {
+  type: 'bar',
+  data: { labels: dailyLabels, datasets: [{ label: 'مصرف روزانه (بایت)', data: dailyData, backgroundColor: 'rgba(54,162,235,0.6)' }] },
+  options: { scales: { y: { beginAtZero: true } } }
+});
+
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: { labels: monthlyLabels, datasets: [{ label: 'مصرف ماهانه (بایت)', data: monthlyData, backgroundColor: 'rgba(255,99,132,0.6)' }] },
+  options: { scales: { y: { beginAtZero: true } } }
+});
+</script>
+<h3>🧪 تست داده‌های واقعی:</h3>
+{% for d in daily %}
+  <p>{{ d.date }} → {{ d.total_bytes_used }} bytes → {{ d.total_bytes_used|bytes_to_mb }} MB</p>
+{% endfor %}
+{% endblock %}

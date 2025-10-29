@@ -1,0 +1,13 @@
+                                                                List of databases
+   Name    |  Owner   | Encoding |          Collate           |           Ctype            | ICU Locale | Locale Provider |   Access privileges   
+-----------+----------+----------+----------------------------+----------------------------+------------+-----------------+-----------------------
+ mydb      | postgres | UTF8     | English_United States.1252 | English_United States.1252 |            | libc            | =Tc/postgres         +
+           |          |          |                            |                            |            |                 | postgres=CTc/postgres+
+           |          |          |                            |                            |            |                 | myuser=CTc/postgres
+ postgres  | postgres | UTF8     | English_United States.1252 | English_United States.1252 |            | libc            | 
+ template0 | postgres | UTF8     | English_United States.1252 | English_United States.1252 |            | libc            | =c/postgres          +
+           |          |          |                            |                            |            |                 | postgres=CTc/postgres
+ template1 | postgres | UTF8     | English_United States.1252 | English_United States.1252 |            | libc            | =c/postgres          +
+           |          |          |                            |                            |            |                 | postgres=CTc/postgres
+(4 rows)
+

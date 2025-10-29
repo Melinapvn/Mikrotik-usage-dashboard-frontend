@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% load usage_filters %}
+
+{% block title %}📊 داشبورد مدیریتی{% endblock %}
+
+{% block content %}
+<h1 style="text-align:right;">📊 داشبورد مدیریتی</h1>
+
+<div style="direction:rtl; margin-top:30px;">
+  <h2 onclick="toggleSection('daily')">مصرف روزانه</h2>
+  <div id="daily" style="margin-bottom:30px; display:none;">
+    <canvas id="dailyChart" height="120"></canvas>
+  </div>
+
+  <h2 onclick="toggleSection('monthly')">مصرف ماهانه</h2>
+  <div id="monthly" style="margin-bottom:30px; display:none;">
+    <canvas id="monthlyChart" height="120"></canvas>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+const dailyLabels = [{% for d in daily %}"{{ d.date }}",{% endfor %}];
+const dailyData = [{% for d in daily %}{{ d.total_bytes_used|bytes_to_mb }},{% endfor %}];
+const monthlyLabels = [{% for m in monthly %}"{{ m.year }}/{{ m.month }}",{% endfor %}];
+const monthlyData = [{% for m in monthly %}{{ m.total_bytes_used }},{% endfor %}];
+
+function toggleSection(id) {
+  const section = document.getElementById(id);
+  section.style.display = (section.style.display === "none" ? "block" : "none");
+  if (id === 'daily') makeDailyChart();
+  if (id === 'monthly') makeMonthlyChart();
+}
+
+function makeDailyChart() {
+  const ctx = document.getElementById("dailyChart").getContext("2d");
+  new Chart(ctx, { type:'bar', data:{ labels:dailyLabels, datasets:[{label:'مصرف روزانه', data:dailyData}] }});
+}
+
+function makeMonthlyChart() {
+  const ctx = document.getElementById("monthlyChart").getContext("2d");
+  new Chart(ctx, { type:'bar', data:{ labels:monthlyLabels, datasets:[{label:'مصرف ماهانه', data:monthlyData}] }});
+}
+</script>
+<h3>🧪 تست داده‌های واقعی:</h3>
+{% for d in daily %}
+  <p>{{ d.date }} → {{ d.total_bytes_used }} bytes → {{ d.total_bytes_used|bytes_to_mb }} MB</p>
+{% endfor %}
+{% endblock %}
