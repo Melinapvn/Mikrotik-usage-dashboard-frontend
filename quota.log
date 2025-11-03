@@ -248,3 +248,6 @@ DEBUG: pct=120.0, used=7200,quota=6000
 DEBUG: pct=16.666666666666664, used=1000,quota=6000
 DEBUG: pct=75.0, used=4500,quota=6000
 DEBUG: pct=75.0, used=4500,quota=6000
+DEBUG: pct=16.666666666666664, used=1000,quota=6000
+DEBUG: pct=150.0, used=9000,quota=6000
+DEBUG: pct=150.0, used=9000,quota=6000
