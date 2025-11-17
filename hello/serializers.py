@@ -20,6 +20,7 @@ class DailyUsageSerializer(serializers.ModelSerializer):
         fields = ['username', 'date', 'total_bytes_used']   
         
 class MonthlyUsageSerializer(serializers.ModelSerializer):
+    username=serializers.CharField(source='user.username',read_only=True)
     class Meta:
         model = MonthlyUsage
-        fields = ['user', 'year','month', 'total_bytes_used']        
+        fields = ['username', 'year','month', 'total_bytes_used']        

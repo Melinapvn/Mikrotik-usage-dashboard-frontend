@@ -33,13 +33,15 @@ def daily_usage_api(request):
 
 @api_view(['GET'])
 def daily_calculate_api(request):
-    data = DailyUsage.objects.all().order_by('-date')
+    today=date.today()
+    data = DailyUsage.objects.filter(date=today).order_by('-date')
     serializer = DailyUsageSerializer(data, many=True)
     return Response(serializer.data)  
 
 @api_view(['GET'])
 def monthly_calculate_api(request):
-    data = MonthlyUsage.objects.all().order_by('year','-month')
+    today=date.today()
+    data = MonthlyUsage.objects.filter(year=today.year,month=today.month).order_by('-total_bytes_used')
     serializer = MonthlyUsageSerializer(data, many=True)
     return Response(serializer.data)
 
@@ -102,6 +104,19 @@ def top_consumers_daily(request):
 
     data = (
         DailyUsage.objects.filter(date=today)
+        .values('user__username', 'total_bytes_used')
+        .order_by('-total_bytes_used')[:5]
+    )
+
+    return Response(list(data))    
+    
+@api_view(['GET'])
+def top_consumers_monthly(request):
+    today = date.today()
+
+    data = (
+        MonthlyUsage.objects
+        .filter(year=today.year, month=today.month)
         .values('user__username', 'total_bytes_used')
         .order_by('-total_bytes_used')[:5]
     )

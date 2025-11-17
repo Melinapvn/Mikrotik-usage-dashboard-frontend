@@ -23,7 +23,7 @@ urlpatterns = [
     path('api/export/daily/csv/', views.export_daily_usage_csv, name='export_daily_usage_csv'),
     path('api/export/daily/excel/', views.export_daily_usage_excel, name='export_daily_usage_excel'),    
     path("api/top-consumers-daily/", views.top_consumers_daily, name="top-consumers-daily"),
-    
+    path("api/top_consumers_monthly/", views.top_consumers_monthly, name="top-consumers-daily"),
 ]
 
 

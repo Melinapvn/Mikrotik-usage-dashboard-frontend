@@ -147,6 +147,47 @@ MOCK_DATA = [
         'bytes-out': '4000',       
         'uptime' : '15h15m30s',
     },
+         {
+        'user': 'Tina',
+        'address': '192.168.1.10',
+        'mac-address': 'AA:BB:CC:DD:EE:01',
+        'bytes-in': '500',
+        'bytes-out': '100',       
+        'uptime' : '15h15m30s',
+    },
+            {
+        'user': 'Saba',
+        'address': '192.168.1.10',
+        'mac-address': 'AA:BB:CC:DD:EE:01',
+        'bytes-in': '10',
+        'bytes-out': '100',       
+        'uptime' : '15h15m30s',
+    },
+           {
+        'user': 'talash',
+        'address': '192.168.1.10',
+        'mac-address': 'AA:BB:CC:DD:EE:01',
+        'bytes-in': '20',
+        'bytes-out': '800',       
+        'uptime' : '15h15m30s',
+    },
+      {
+        'user': 'hemmat',
+        'address': '192.168.1.10',
+        'mac-address': 'AA:BB:CC:DD:EE:01',
+        'bytes-in': '20',
+        'bytes-out': '800',       
+        'uptime' : '15h15m30s',
+    },
+          {
+        'user': 'Iran',
+        'address': '192.168.1.10',
+        'mac-address': 'AA:BB:CC:DD:EE:01',
+        'bytes-in': '20',
+        'bytes-out': '800',       
+        'uptime' : '15h15m30s',
+    },
+    
 ]
 
 def fetch_mikrotik(options=None, username=None, mock_mode=True):
