@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from .models import Customer
-from .models import UserUsage,DailyUsage,MonthlyUsage
+from .models import UserUsage,DailyUsage,MonthlyUsage,MikrotikUser
+
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model=Customer
@@ -23,4 +24,13 @@ class MonthlyUsageSerializer(serializers.ModelSerializer):
     username=serializers.CharField(source='user.username',read_only=True)
     class Meta:
         model = MonthlyUsage
-        fields = ['username', 'year','month', 'total_bytes_used']        
+        fields = ['username', 'year','month', 'total_bytes_used']  
+
+class MikrotikUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MikrotikUser
+        fields = ['id', 'username', 'address', 'source', 'raw', 'last_seen', 'quote_bytes', 'email']  # و هر فیلد لازم
+        read_only_fields = ['id', 'last_seen']  # last_seen شاید خواندنی باشه 
+
+class FetchUserSerializer(serializers.Serializer):
+    username = serializers.CharField()        

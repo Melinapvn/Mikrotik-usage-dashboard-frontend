@@ -42,7 +42,7 @@ class MikrotikUser(models.Model):
     source = models.CharField(max_length=50, blank=True, null=True)     
     raw = models.JSONField(default=dict)  
     
-    last_seen = models.DateTimeField()
+    last_seen = models.DateTimeField(default=timezone.now)
     
     quote_bytes = models.BigIntegerField(default=6000)
     

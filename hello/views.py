@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import UserUsage
+from .models import UserUsage,MikrotikUser
 from .serializers import UserUsageSerializer
 from django.db.models import Sum
 from django.utils import timezone
@@ -12,26 +12,39 @@ from hello.models import DailyUsage,MonthlyUsage,UserUsage,MikrotikUser,WarnedUs
 # Create your views here.
 from django.http import HttpResponse 
 from .models import Customer
-from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework import viewsets,status
+from rest_framework.decorators import api_view,permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .models import Customer
-from .serializers import DailyUsageSerializer,MonthlyUsageSerializer,CustomerSerializer
+from .serializers import DailyUsageSerializer,MonthlyUsageSerializer,CustomerSerializer,MonthlyUsageSerializer,FetchUserSerializer
 from datetime import date
-from rest_framework.decorators import api_view
 import csv, io
 from reportlab.pdfgen import canvas
 from openpyxl import Workbook
+from rest_framework.permissions import IsAuthenticatedOrReadOnly,AllowAny
+from hello.utils.mikrotik_fetch import fetch_mikrotik
+from hello.utils.aggregate import calculate_daily_usage, calculate_monthly_usage_for_user
+from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
+user=get_user_model
 
 
  
 @api_view(['GET']) 
+@permission_classes([AllowAny])
+@authentication_classes([])
 def daily_usage_api(request):
+
     data = UserUsage.objects.all().order_by('-snapshot_time')
     serializer = UserUsageSerializer(data, many=True)
     return Response(serializer.data) 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
 def daily_calculate_api(request):
     today=date.today()
     data = DailyUsage.objects.filter(date=today).order_by('-date')
@@ -39,6 +52,8 @@ def daily_calculate_api(request):
     return Response(serializer.data)  
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
 def monthly_calculate_api(request):
     today=date.today()
     data = MonthlyUsage.objects.filter(year=today.year,month=today.month).order_by('-total_bytes_used')
@@ -99,6 +114,8 @@ def export_daily_usage_excel(request):
     return response
     
 @api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
 def top_consumers_daily(request):
     today = date.today()
 
@@ -111,6 +128,8 @@ def top_consumers_daily(request):
     return Response(list(data))    
     
 @api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
 def top_consumers_monthly(request):
     today = date.today()
 
@@ -123,7 +142,53 @@ def top_consumers_monthly(request):
 
     return Response(list(data))    
 
+class FetchUserAPIView(APIView):
+    permission_classes = (AllowAny,)  # یا IsAdminUser اگر می‌خواهی فقط ادمین بزند
+    def post(self, request):
+        serializer = FetchUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data["username"]
+        try:
+            fetch_mikrotik(username=username)   # این تابع قبلاً کار می‌کند
+            return Response({"status":"ok", "message": f"usage updated for {username}"})
+        except Exception as e:
+            return Response({"status":"error","message":str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+# ---------- API های مخصوص user (require auth) ----------
+class MeFetchUsageAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def post(self, request):
+        username = request.user.username
+        try:
+            fetch_mikrotik(username=username)
+            return Response({"status":"ok","message":f"usage updated for {username}"})
+        except Exception as e:
+            return Response({"status":"error","message":str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class MeDailyUsageAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        user = request.user
+        # فرض می‌گیریم calculate_daily_usage_for_user_both وجود داره و عدد برمی‌گرداند
+        try:
+            # نمونه: تابع باید مقدار روزانه را برگرداند (بایت)
+            daily = calculate_daily_usage(user)  # یا تابعی که تو داری
+            return Response({"user": user.username, "daily_total": daily})
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class MeMonthlyUsageAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        user = request.user
+        try:
+            monthly = calculate_monthly_usage_for_user(user)
+            return Response({"user": user.username, "monthly_total": monthly})
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
 
 @api_view(['GET'])

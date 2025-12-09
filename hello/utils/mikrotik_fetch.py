@@ -6,6 +6,7 @@ from datetime import timedelta
 from hello.models import MikrotikUser, UserUsage
 import re
 import ast 
+from django.contrib.auth .models import User
 
 
 def safe_int(x):
@@ -82,20 +83,13 @@ MOCK_DATA1 = [
     },
 ]
 MOCK_DATA = [
-    {
-        'user': 'test1',
-        'address': '192.168.1.10',
-        'mac-address': 'AA:BB:CC:DD:EE:01',
-        'bytes-in': '3000',
-        'bytes-out': '2000',       
-        'uptime' : '11h15m30s',
-    },
+  
      {
         'user': 'test1',
         'address': '192.168.1.10',
         'mac-address': 'AA:BB:CC:DD:EE:02',
         'bytes-in': '2000',
-        'bytes-out': '4000',       
+        'bytes-out': '40000',       
         'uptime' : '5h15m30s',
     },
     {
@@ -110,8 +104,8 @@ MOCK_DATA = [
         'user': 'ali',
         'address': '192.168.1.12',
         'mac-address': 'AA:BB:CC:DD:EE:03',
-        'bytes-in': '5000',
-        'bytes-out': '700',
+        'bytes-in': '5000000000',
+        'bytes-out': '7000000000',
         'uptime' : '9h15m30s'
     },
     {
@@ -134,32 +128,18 @@ MOCK_DATA = [
         'user': 'melisssa',
         'address': '192.168.1.10',
         'mac-address': 'AA:BB:CC:DD:EE:01',
-        'bytes-in': '1000',
+        'bytes-in': '1',
         'bytes-out': '1000',       
         'uptime' : '13h15m30s',
     },
     
-     {
-        'user': 'Elssa',
-        'address': '192.168.1.10',
-        'mac-address': 'AA:BB:CC:DD:EE:01',
-        'bytes-in': '500',
-        'bytes-out': '4000',       
-        'uptime' : '15h15m30s',
-    },
-         {
-        'user': 'Tina',
-        'address': '192.168.1.10',
-        'mac-address': 'AA:BB:CC:DD:EE:01',
-        'bytes-in': '500',
-        'bytes-out': '100',       
-        'uptime' : '15h15m30s',
-    },
+   
+    
             {
         'user': 'Saba',
         'address': '192.168.1.10',
         'mac-address': 'AA:BB:CC:DD:EE:01',
-        'bytes-in': '10',
+        'bytes-in': '1000',
         'bytes-out': '100',       
         'uptime' : '15h15m30s',
     },
@@ -176,7 +156,7 @@ MOCK_DATA = [
         'address': '192.168.1.10',
         'mac-address': 'AA:BB:CC:DD:EE:01',
         'bytes-in': '20',
-        'bytes-out': '800',       
+        'bytes-out': '8000',       
         'uptime' : '15h15m30s',
     },
           {
@@ -184,7 +164,7 @@ MOCK_DATA = [
         'address': '192.168.1.10',
         'mac-address': 'AA:BB:CC:DD:EE:01',
         'bytes-in': '20',
-        'bytes-out': '800',       
+        'bytes-out': '8000',       
         'uptime' : '15h15m30s',
     },
     
@@ -197,8 +177,10 @@ def fetch_mikrotik(options=None, username=None, mock_mode=True):
         
         process_items(MOCK_DATA, "mock")
         print("end process")
+        print(username)
         if username:
-            check_and_handle_quota(user=username)
+            user_obj = MikrotikUser.objects.get(username=username)
+            check_and_handle_quota(user=user_obj)
         else:        
             check_and_handle_quota()
         return
@@ -273,6 +255,13 @@ def process_items(items, source_name):
             },
         
         )
+        django_user, django_created = User.objects.get_or_create(username=user_obj.username)
+        if django_created:
+    # اگر تازه ساخته شد، پسورد اولیه بذار
+            django_user.set_password("123456")  # میتونی پسورد دیگه هم بذاری
+            django_user.save()
+    
+
 
         UserUsage.objects.create(
             user=user_obj,

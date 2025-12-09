@@ -7,7 +7,7 @@ from datetime import datetime, time
 from librouteros import connect
 from hello.models import MikrotikUser, UserUsage, DailyUsage
 from datetime import timedelta
-import re
+
 def calculate_daily_usage(snapshot_date=None):
     print("shuru")
     if not snapshot_date:

@@ -94,28 +94,61 @@ class DailyUsageConsumer(AsyncWebsocketConsumer):
             print("❌ Exception in keep_alive:")
             traceback.print_exc()
 
-    
+class TopDailyConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.group_name = "top_daily_group"
+
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+
+        print("🟢 TopDaily WebSocket connected:", self.channel_name)
+        await self.accept()
+
+        await self.send(text_data=json.dumps({
+            "message": "top daily websocket connected"
+        }))
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+        print("🔴 TopDaily WebSocket disconnected")
+
+    async def send_top_daily(self, event):
+        """ این event از signal فراخوانی می‌شود """
+        print("📤 Sending top daily update to client:", event["data"])
+        await self.send(text_data=json.dumps(event["data"]))    
     
 
             
 class MonthlyUsageConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self.channel_layer.group_add("monthly_usage", self.channel_name)
+        await self.channel_layer.group_add("monthly_usage_group", self.channel_name)
         await self.accept()
-        print("✅ Monthly WS connected")
+        await self.send(text_data=json.dumps({"message": "monthly websocket connected"}))
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("monthly_usage", self.channel_name)
+        await self.channel_layer.group_discard("monthly_usage_group", self.channel_name)
 
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        if data.get("action") == "refresh":
-            await self.send(text_data=json.dumps({"type": "initial", "message": "monthly initial"}))
-
-    async def send_update(self, event):
+    async def send_monthly_update(self, event):
         await self.send(text_data=json.dumps(event["data"]))
 
+class TopMonthlyConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.channel_layer.group_add("top_monthly_group", self.channel_name)
+        await self.accept()
+        await self.send(text_data=json.dumps({"message": "top monthly connected"}))
 
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard("top_monthly_group", self.channel_name)
+
+    async def send_top_monthly(self, event):
+        await self.send(text_data=json.dumps(event["data"]))
+        
+        
 class LiveUsageConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.channel_layer.group_add("live_usage", self.channel_name)
